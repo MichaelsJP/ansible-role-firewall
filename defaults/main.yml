@@ -1,0 +1,19 @@
+---
+# Interface name that connects the server to the webs.
+bootstrap_firewall_interface_name: eth0 # Default: eth0
+
+# Default 80, 443, 8080. Multiple ports with , separated.
+bootstrap_firewall_tcp_ports: [ ]
+
+# Default no ports. Multiple ports with , separated.
+bootstrap_firewall_udp_ports: [ ]
+
+# Decide if docker should be handled by the iptable rules defined by this role. (Heavily recommended!)
+# Else docker related connections will be open to the public.
+bootstrap_firewall_docker_secure: true # Default: true
+
+# Decide if iptables will turn of connections from external sources.
+bootstrap_firewall_restrict_to_internal: true # Default is true.
+# Restrict ssh access to specific ips and networks. Multiple need to be separated with commas. e.g. -s 0.0.0.0,127.0.0.1/8.
+# Even when `bootstrap_firewall_restrict_to_internal` is set to true, it will still accept connections from external networks.
+bootstrap_firewall_restricted_ssh_access_ip: []

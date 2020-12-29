@@ -1,0 +1,39 @@
+---
+# This is adding rules to the INPUT chain, without touching other firewall rules
+# rules created by docker or fail2ban should not be interfered with.
+- name: Create firewall directory.
+  file:
+    path: "/etc/firewall"
+    state: directory
+    mode: '0755'
+
+- name: Copy script which adds IPtables rules.
+  become: yes
+  template:
+    src: firewall_rules.j2
+    dest: "/etc/firewall/firewall_rules.sh"
+    mode: a+x
+
+- name: Create systemd service to add Firewall rules to iptables.
+  copy:
+    src: firewall.service
+    dest: "/etc/systemd/system/firewall.service"
+    force: yes
+    owner: root
+    group: root
+    mode: '0755'
+  notify:
+    - reload systemd
+    - restart firewall
+
+- name: Enable Firewall rules (on startup).
+  service:
+    name: firewall.service
+    enabled: yes
+
+- name: Restart firewall.service in all cases
+  debug:
+    msg: ""
+  notify:
+    - restart firewall
+    - Reboot host
