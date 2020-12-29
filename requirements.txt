@@ -1,0 +1,10 @@
+# Tests run on the previous and current (latest) version of Ansible.
+ansible>=2.9
+# Some Jinja2 filters are used that are available in the newer releases.
+jinja2>=2.11.2
+yamllint==1.25.0
+molecule==3.2.1
+docker-py==1.10.6
+cryptography>=1.5
+shade==1.33.0
+pre-commit==2.9.3
