@@ -1,0 +1,31 @@
+---
+- name: Verify
+  hosts: all
+  become: yes
+  gather_facts: true
+
+  tasks:
+    - name: check if connection still works
+      ping:
+
+    - name: Check that the firewall.service exists
+      stat:
+        path: /etc/systemd/system/firewall.service
+      register: firewall_service_result
+
+    - name: Check that the firewall_rules.sh exists
+      stat:
+        path: /etc/firewall/firewall_rules.sh
+      register: firewall_rules_result
+
+    - name: Fail if /etc/systemd/system/firewall.service file is not present
+      fail:
+        msg: The system may not be provisioned according.
+      when:
+        - (not firewall_service_result.stat.exists)
+
+    - name: Fail if /etc/firewall/firewall_rules.sh is not present
+      fail:
+        msg: The system may not be provisioned according.
+      when:
+        - (not firewall_rules_result.stat.exists)

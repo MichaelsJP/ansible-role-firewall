@@ -1,0 +1,21 @@
+---
+galaxy_info:
+  author: Hosteq UG
+  description: Bootstrap Hosteq nodes
+  min_ansible_version: 2.8
+  license: unlicensed
+  platforms:
+    - name: Ubuntu
+      versions:
+        - xenial
+        - bionic
+    - name: Debian
+      versions:
+        - bullseye
+        - buster
+  galaxy_tags:
+    - bootstrap
+    - firewall
+    - iptables
+collections: [ ]
+dependencies: [ ]

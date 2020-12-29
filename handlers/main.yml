@@ -1,0 +1,31 @@
+---
+
+- name: Reboot host
+  reboot:
+    msg: "Reboot initiated by Ansible"
+    connect_timeout: 10
+    reboot_timeout: 600
+    post_reboot_delay: 15
+
+- name: restart systemd-logind
+  service:
+    name: systemd-logind
+    state: restarted
+  when: >
+    ansible_service_mgr == 'systemd'
+
+- name: reload systemd
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: cron
+
+- name: restart firewall
+  service:
+    name: firewall.service
+    state: restarted
+
+- name: restart rsyslog
+  service:
+    name: "{{ rsyslog_service }}"
+    state: restarted

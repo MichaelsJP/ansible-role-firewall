@@ -1,0 +1,10 @@
+---
+# tasks file for bootstrap
+- name: include assert.yml
+  include_tasks: firewall_assert.yml
+  tags:
+    - always
+
+- name: Setup node firewall
+  become: yes
+  import_tasks: firewall.yml
