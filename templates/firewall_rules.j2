@@ -210,7 +210,7 @@ $IPTABLES -A $COMBINED_CHAIN -p icmp -m state --state RELATED -j RELATED_ICMP $R
 $IPTABLES -A OUTPUT -p icmp -m state --state RELATED -j RELATED_ICMP $RLIMIT
 
 # Define the icmp incoming rules.
-{% if bootstrap_firewall_restrict_icmp_to_internal %}
+{% if  bootstrap_firewall_restrict_incoming_icmp_to_internal %}
 # Only allow icmp from internal. Use drop to hide the server.
 $IPTABLES -A $COMBINED_CHAIN -p icmp -i $INTERFACE --icmp-type echo-request -j DROPICMPLOG $RLIMIT
 {% endif %}

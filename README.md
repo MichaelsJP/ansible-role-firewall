@@ -66,7 +66,7 @@ bootstrap_firewall_tcp_ports_outgoing: "21,22,25,43,80,443,465,587,995" # Allow 
 bootstrap_firewall_udp_ports_outgoing: "53, 123" # Allow on all interfaces. Default: (dns, ntp)
 
 # Decide if iptables will turn of connections from external sources.
-bootstrap_firewall_restrict_icmp_to_internal: true # When icmp is reachable and not dropped, the outside knows the server is not reachable but online and botnets will continue hammering it.
+ bootstrap_firewall_restrict_incoming_icmp_to_internal: true # When icmp is reachable and not dropped, the outside knows the server is not reachable but online and botnets will continue hammering it.
 
 # Decide if docker should be handled by the iptable rules defined by this role. (Heavily recommended!)
 # Else docker related connections will be open to the public completely.

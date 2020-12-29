@@ -1,35 +1,63 @@
 ---
-- name: test if bootstrap_firewall_tcp_ports is set correctly
-  assert:
-    that:
-      - bootstrap_firewall_tcp_ports is defined
-    quiet: yes
-- name: test if bootstrap_firewall_udp_ports is set correctly
-  assert:
-    that:
-      - bootstrap_firewall_udp_ports is defined
-    quiet: yes
-
-- name: test if bootstrap_firewall_restrict_to_internal is set correctly
-  assert:
-    that:
-      - bootstrap_firewall_restrict_to_internal is defined
-    quiet: yes
-
-- name: test if bootstrap_firewall_restricted_ssh_access_ip is set correctly
-  assert:
-    that:
-      - bootstrap_firewall_restricted_ssh_access_ip is defined
-    quiet: yes
-
 - name: test if bootstrap_firewall_interface_name is set correctly
   assert:
     that:
       - bootstrap_firewall_interface_name is defined
     quiet: yes
 
+- name: test if bootstrap_firewall_tcp_ports_internal is set correctly
+  assert:
+    that:
+      - bootstrap_firewall_tcp_ports_internal is defined
+    quiet: yes
+- name: test if bootstrap_firewall_udp_ports_internal is set correctly
+  assert:
+    that:
+      - bootstrap_firewall_udp_ports_internal is defined
+    quiet: yes
+- name: test if bootstrap_firewall_tcp_ports_external is set correctly
+  assert:
+    that:
+      - bootstrap_firewall_tcp_ports_external is defined
+    quiet: yes
+- name: test if bootstrap_firewall_udp_ports_external is set correctly
+  assert:
+    that:
+      - bootstrap_firewall_udp_ports_external is defined
+    quiet: yes
+
+- name: test if bootstrap_firewall_tcp_ports_outgoing is set correctly
+  assert:
+    that:
+      - bootstrap_firewall_tcp_ports_outgoing is defined
+    quiet: yes
+
+- name: test if bootstrap_firewall_udp_ports_outgoing is set correctly
+  assert:
+    that:
+      - bootstrap_firewall_udp_ports_outgoing is defined
+    quiet: yes
+
 - name: test if bootstrap_firewall_docker_secure is set correctly
   assert:
     that:
       - bootstrap_firewall_docker_secure is defined
+    quiet: yes
+
+- name: test if bootstrap_firewall_restrict_incoming_icmp_to_internal is set correctly
+  assert:
+    that:
+      - bootstrap_firewall_restrict_incoming_icmp_to_internal is defined
+    quiet: yes
+
+- name: test if bootstrap_firewall_docker_secure is set correctly
+  assert:
+    that:
+      - bootstrap_firewall_docker_secure is defined
+    quiet: yes
+
+- name: test if bootstrap_firewall_restricted_ssh_access_ip is set correctly
+  assert:
+    that:
+      - bootstrap_firewall_restricted_ssh_access_ip is defined
     quiet: yes
