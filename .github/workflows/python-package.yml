@@ -27,11 +27,11 @@ jobs:
       matrix:
         config:
           - image: "debian"
-            tag: "stretch"
+            tag: "latest"
           - image: "debian"
-            tag: "buster"
+            tag: "stretch"
           - image: "ubuntu"
-            tag: "xenial"
+            tag: "latest"
           - image: "ubuntu"
             tag: "bionic"
     steps:
