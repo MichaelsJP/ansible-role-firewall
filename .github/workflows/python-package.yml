@@ -1,0 +1,48 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Ansible Role Firewall Build
+
+on:
+  push:
+    branches: [ 'main' ]
+  pull_request:
+    branches: [ '**' ]
+  schedule:
+    - cron: '0 0 * * 0'
+
+jobs:
+  lint:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+    - name: Install Python 2
+      uses: actions/setup-python@v2
+    - name: Install and run pre-commit
+      uses: pre-commit/action@v2.0.0
+      with:
+        extra_args: --all-files
+  molecule:
+    needs:
+      - lint
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        image:
+          - debian
+          - ubuntu
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          path: "${{ github.repository }}"
+      - name: Install Python 2
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: molecule
+        uses: robertdebock/molecule-action@2.6.8
+        with:
+          image: ${{ matrix.config.image }}
+          tag: ${{ matrix.config.tag }}
