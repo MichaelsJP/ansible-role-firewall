@@ -326,11 +326,16 @@ $IPTABLES -A FORWARD -j REJECTLOG
 ######################################
 ########## Restart Services ##########
 ######################################
+
+{% if bootstrap_firewall_docker_secure %}
 # Restart Docker
 if check_programm "docker"; then
   say "Restart docker"
   systemctl restart docker
 fi
+{% endif %}
+
+
 
 ##########################
 ########## Exit ##########
