@@ -1,4 +1,4 @@
 ---
 roles:
   - src: git+https://github.com/MichaelsJP/ansible-role-bootstrap.git
-    version: v0.1
+    version: v0.2
