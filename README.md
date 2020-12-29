@@ -44,24 +44,39 @@ Below are the available variables together with their default values:
 
 ```yaml
 # Interface name that connects the server to the webs.
-bootstrap_firewall_interface_name: eth0 # Default: eth0
+bootstrap_firewall_interface_name: "eth0" # Default: eth0
 
-# Default 80, 443, 8080. Multiple ports with , separated.
-bootstrap_firewall_tcp_ports: [ ]
+# Define internal tcp ports. Multiple ports with , separated. e.g. '80, 443, 8080'.
+bootstrap_firewall_tcp_ports_internal: "80, 443, 8080"
 
-# Default no ports. Multiple ports with , separated.
-bootstrap_firewall_udp_ports: [ ]
+# Define internal udp ports. Multiple ports with , separated. e.g. '80, 443, 8080'.
+bootstrap_firewall_udp_ports_internal: [ ]
 
-# Decide if docker should be handled by the iptable rules defined by this role. (Heavily recommended!)
-# Else docker related connections will be open to the public.
-bootstrap_firewall_docker_secure: true # Default: true
+# Define external tcp ports. Multiple ports with , separated. e.g. '80, 443, 8080'.
+bootstrap_firewall_tcp_ports_external: [ ]
+
+# Define external udp ports. Multiple ports with , separated. e.g. '80, 443, 8080'.
+bootstrap_firewall_udp_ports_external: [ ]
+
+# Define allowed outgoing tcp ports. Multiple ports with , separated. e.g. '80, 443, 8080'.
+bootstrap_firewall_tcp_ports_outgoing: "21,22,25,43,80,443,465,587,995" # Allow on all interfaces. Default: (SSH,FTP,STMP,WHOIS,HTTP,HTTPS,SMTPS,SUBMISSION,POP3S)
+
+# Define allowed outgoing udp ports. Multiple ports with , separated. e.g. '80, 443, 8080'.
+# DNS and ntp are needed for the system to work properly.
+bootstrap_firewall_udp_ports_outgoing: "53, 123" # Allow on all interfaces. Default: (dns, ntp)
 
 # Decide if iptables will turn of connections from external sources.
-bootstrap_firewall_restrict_to_internal: true # Default is true.
+bootstrap_firewall_restrict_icmp_to_internal: true # When icmp is reachable and not dropped, the outside knows the server is not reachable but online and botnets will continue hammering it.
 
-# Restrict ssh access to specific ips and networks. Multiple need to be separated with commas. e.g. -s 0.0.0.0,127.0.0.1/8.
-# Even when `bootstrap_firewall_restrict_to_internal` is set to true, it will still accept connections from external networks.
-bootstrap_firewall_restricted_ssh_access_ip: [ ]
+# Decide if docker should be handled by the iptable rules defined by this role. (Heavily recommended!)
+# Else docker related connections will be open to the public completely.
+bootstrap_firewall_docker_secure: true
+
+# Restrict ssh access to specific ips and networks.
+# SSH is always denied from external besides the ips or ip ranges defined below.
+# Only enable when necessary! Activating it will put pressure on the cpu, when checking ssh requests against ip addresses.
+bootstrap_firewall_restricted_ssh_access_ip: [ ] # Multiple need to be separated with commas. e.g. -s 0.0.0.0,127.0.0.1/8.
+
 ```
 
 Example Playbook
