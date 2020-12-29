@@ -4,4 +4,4 @@
   become: yes
   gather_facts: no
   roles:
-   - { role: ansible-role-bootstrap }
+   - { role: michaelsjp.ansible_role_bootstrap }
