@@ -29,7 +29,7 @@ jobs:
           - image: "debian"
             tag: "latest"
           - image: "debian"
-            tag: "stretch"
+            tag: "bullseye"
           - image: "ubuntu"
             tag: "latest"
           - image: "ubuntu"
