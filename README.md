@@ -66,13 +66,14 @@ bootstrap_firewall_tcp_ports_outgoing: "21,22,25,43,80,443,465,587,995" # Allow 
 bootstrap_firewall_udp_ports_outgoing: "53, 123" # Allow on all interfaces. Default: (dns, ntp)
 
 # Decide if iptables will turn of connections from external sources.
- bootstrap_firewall_restrict_incoming_icmp_to_internal: true # When icmp is reachable and not dropped, the outside knows the server is not reachable but online and botnets will continue hammering it.
+bootstrap_firewall_restrict_incoming_icmp_to_internal: true # When icmp is reachable and not dropped, the outside knows the server is not reachable but online and botnets will continue hammering it.
 
 # Decide if docker should be handled by the iptable rules defined by this role. (Heavily recommended!)
 # Else docker related connections will be open to the public completely.
 bootstrap_firewall_docker_secure: true
 
 # Restrict ssh access to specific ips and networks.
+# This is especially handy if an external backup routine like borg needs SSH access from a static ip.
 # SSH is always denied from external besides the ips or ip ranges defined below.
 # Only enable when necessary! Activating it will put pressure on the cpu, when checking ssh requests against ip addresses.
 bootstrap_firewall_restricted_ssh_access_ip: [ ] # Multiple need to be separated with commas. e.g. -s 0.0.0.0,127.0.0.1/8.
@@ -88,10 +89,8 @@ users too:
 ```yaml
     - hosts: servers
       roles:
-        - src: git+https://github.com/MichaelsJP/ansible-role-bootstrap.git
-          version: v0.1
-        - src: git+https://github.com/MichaelsJP/ansible-role-firewall.git
-          version: v0.1
+        - { role: michaelsjp.ansible_role_bootstrap }
+        - { role: michaelsjp.ansible-role-firewall }
 ```
 
 License
