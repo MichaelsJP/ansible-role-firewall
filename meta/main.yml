@@ -11,7 +11,7 @@ galaxy_info:
         - bionic
     - name: Debian
       versions:
-        - stretch
+        - bullseye
         - buster
   galaxy_tags:
     - bootstrap
