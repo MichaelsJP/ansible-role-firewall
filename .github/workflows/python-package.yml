@@ -25,9 +25,15 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        image:
-          - debian
-          - ubuntu
+        config:
+          - image: "debian"
+            tag: "stretch"
+          - image: "debian"
+            tag: "buster"
+          - image: "ubuntu"
+            tag: "xenial"
+          - image: "ubuntu"
+            tag: "bionic"
     steps:
       - name: checkout
         uses: actions/checkout@v2
