@@ -63,14 +63,14 @@ check_programm() {
 ###### Default policies ########
 ################################
 # Set up logging into iptables file
-if ! grep -qxF ':msg,contains,"[netfilter] " -/var/log/iptables.log' /etc/rsyslog.d/00-iptables.conf; then
+if ! grep -qxF ':msg,contains,"IPTABLES" -/var/log/iptables.log' /etc/rsyslog.d/00-rsyslog-iptables.conf; then
   rm -f "/var/log/iptables.log"
-  echo ':msg,contains,"[netfilter] " -/var/log/iptables.log' >>/etc/rsyslog.d/00-iptables.conf
-  echo '& stop' >>/etc/rsyslog.d/00-iptables.conf
-elif ! grep -qxF '& stop' /etc/rsyslog.d/00-iptables.conf; then
+  echo ':msg,contains,"IPTABLES" -/var/log/iptables.log' >>/etc/rsyslog.d/00-rsyslog-iptables.conf
+  echo '& stop' >>/etc/rsyslog.d/00-rsyslog-iptables.conf
+elif ! grep -qxF '& stop' /etc/rsyslog.d/00-rsyslog-iptables.conf; then
   rm -f "/var/log/iptables.log"
-  echo ':msg,contains,"[netfilter] " -/var/log/iptables.log' >>/etc/rsyslog.d/00-iptables.conf
-  echo '& stop' >>/etc/rsyslog.d/00-iptables.conf
+  echo ':msg,contains,"IPTABLES" -/var/log/iptables.log' >>/etc/rsyslog.d/00-rsyslog-iptables.conf
+  echo '& stop' >>/etc/rsyslog.d/00-rsyslog-iptables.conf
 fi
 
 # Drop everything by default.
