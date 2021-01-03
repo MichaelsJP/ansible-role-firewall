@@ -61,3 +61,13 @@
     that:
       - bootstrap_firewall_restricted_ssh_access_ip is defined
     quiet: yes
+
+- name: "Check if IPTABLES is installed"
+  package_facts:
+    manager: "auto"
+
+- name: test if IPTABLES is installed
+  assert:
+    that:
+      - "'iptables' in ansible_facts.packages"
+    quiet: yes
