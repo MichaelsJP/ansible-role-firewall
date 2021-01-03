@@ -1,6 +1,16 @@
 #!/bin/bash
 # {{ ansible_managed }}
-# Add IPtables rules script /etc/firewall/firewall_rules.sh
+#title          :Add IPtables rules
+#description    :This script sets docker ready iptables rules.
+#author		    :Julian Psotta
+#email		    :julianpsotta@gmail.com
+#source         : https://github.com/MichaelsJP/ansible-role-bootstrap
+#date           :2021-01-03
+#usage		    :sudo bash firewall_rules.sh
+#==============================================================================
+
+today=$(date +%Y%m%d)
+div=======================================
 
 ############################
 ###### Default vars ########
@@ -23,17 +33,9 @@ COMBINED_CHAIN="FILTERS"
 ###### Helper functions ########
 ################################
 # Set this variable in the main Script to give error and other print statements a proper script name.
-SCRIPT_NAME=${SCRIPT_NAME:-"HELPER_SCRIPT"}
+SCRIPT_NAME=${SCRIPT_NAME:-"FIREWALL_SCRIPT"}
 say() {
   echo -e "\e[44m""$SCRIPT_NAME:\e[49m $1" >&2
-}
-
-dependency_found() {
-  echo -e "\e[44m""Dependency check:\e[49m\e[32m found \e[39m ${1}"
-}
-
-dependency_not_found() {
-  echo -e "\e[44m""Dependency check:\e[49m\e[31m not found\e[39m ${1}"
 }
 
 create_chain() {
@@ -242,6 +244,9 @@ $IPTABLES -A $COMBINED_CHAIN $INTERFACE -p tcp --match multiport --dports {{ boo
 {% if bootstrap_firewall_udp_ports_external is defined and bootstrap_firewall_udp_ports_external | length >= 1 %}
 $IPTABLES -A $COMBINED_CHAIN $INTERFACE -p udp --match multiport --dports {{ bootstrap_firewall_udp_ports_external }} -j ACCEPTLOG
 {% endif %}
+
+# Drop all incoming traffic on chain: $COMBINED_CHAIN from interface: $INTERFACE here.
+$IPTABLES -A $COMBINED_CHAIN -i $INTERFACE -j DROPLOG
 
 {% if bootstrap_firewall_tcp_ports_internal is defined and bootstrap_firewall_tcp_ports_internal | length >= 1 %}
 #  Allow ports only on specified networks only

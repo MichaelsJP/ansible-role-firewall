@@ -55,9 +55,3 @@
     that:
       - bootstrap_firewall_docker_secure is defined
     quiet: yes
-
-- name: test if bootstrap_firewall_restricted_ssh_access_ip is set correctly
-  assert:
-    that:
-      - bootstrap_firewall_restricted_ssh_access_ip is defined
-    quiet: yes
