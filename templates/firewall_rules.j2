@@ -38,14 +38,6 @@ say() {
   echo -e "\e[44m""$SCRIPT_NAME:\e[49m $1" >&2
 }
 
-dependency_found() {
-  echo -e "\e[44m""Dependency check:\e[49m\e[32m found \e[39m ${1}"
-}
-
-dependency_not_found() {
-  echo -e "\e[44m""Dependency check:\e[49m\e[31m not found\e[39m ${1}"
-}
-
 create_chain() {
   if [ -n "$1" ]; then
     say "Create chain $1"
