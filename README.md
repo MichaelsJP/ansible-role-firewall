@@ -46,24 +46,24 @@ Below are the available variables together with their default values:
 # Interface name that connects the server to the webs.
 bootstrap_firewall_interface_name: "eth0" # Default: eth0
 
-# Define internal tcp ports. Multiple ports with , separated. e.g. '80, 443, 8080'.
-bootstrap_firewall_tcp_ports_internal: "80, 443, 8080"
+# Define internal tcp ports. Multiple ports with , separated. e.g. '80,443,8080'.
+bootstrap_firewall_tcp_ports_internal: "80,443,8080"
 
-# Define internal udp ports. Multiple ports with , separated. e.g. '80, 443, 8080'.
+# Define internal udp ports. Multiple ports with , separated. e.g. '80,443,8080'.
 bootstrap_firewall_udp_ports_internal: [ ]
 
-# Define external tcp ports. Multiple ports with , separated. e.g. '80, 443, 8080'.
+# Define external tcp ports. Multiple ports with , separated. e.g. '80,443,8080'.
 bootstrap_firewall_tcp_ports_external: [ ]
 
-# Define external udp ports. Multiple ports with , separated. e.g. '80, 443, 8080'.
+# Define external udp ports. Multiple ports with , separated. e.g. '80,443,8080'.
 bootstrap_firewall_udp_ports_external: [ ]
 
-# Define allowed outgoing tcp ports. Multiple ports with , separated. e.g. '80, 443, 8080'.
+# Define allowed outgoing tcp ports. Multiple ports with , separated. e.g. '80,443,8080'.
 bootstrap_firewall_tcp_ports_outgoing: "21,22,25,43,80,443,465,587,995" # Allow on all interfaces. Default: (SSH,FTP,STMP,WHOIS,HTTP,HTTPS,SMTPS,SUBMISSION,POP3S)
 
-# Define allowed outgoing udp ports. Multiple ports with , separated. e.g. '80, 443, 8080'.
+# Define allowed outgoing udp ports. Multiple ports with , separated. e.g. '80,443,8080'.
 # DNS and ntp are needed for the system to work properly.
-bootstrap_firewall_udp_ports_outgoing: "53, 123" # Allow on all interfaces. Default: (dns, ntp)
+bootstrap_firewall_udp_ports_outgoing: "53,123" # Allow on all interfaces. Default: (dns, ntp)
 
 # Decide if iptables will turn of connections from external sources.
 bootstrap_firewall_restrict_incoming_icmp_to_internal: true # When icmp is reachable and not dropped, the outside knows the server is not reachable but online and botnets will continue hammering it.
@@ -76,15 +76,12 @@ bootstrap_firewall_docker_secure: true
 # This is especially handy if an external backup routine like borg needs SSH access from a static ip.
 # SSH is always denied from external besides the ips or ip ranges defined below.
 # Only enable when necessary! Activating it will put pressure on the cpu, when checking ssh requests against ip addresses.
-bootstrap_firewall_restricted_ssh_access_ip: [ ] # Multiple need to be separated with commas. e.g. -s 0.0.0.0,127.0.0.1/8.
+bootstrap_firewall_restricted_ssh_access_ip: [ ] # Multiple need to be separated with commas. e.g. 0.0.0.0,127.0.0.1/8.
 
 ```
 
 Example Playbook
 ----------------
-
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for
-users too:
 
 ```yaml
     - hosts: servers
