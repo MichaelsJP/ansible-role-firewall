@@ -1,6 +1,16 @@
 #!/bin/bash
 # {{ ansible_managed }}
-# Add IPtables rules script /etc/firewall/firewall_rules.sh
+#title          :Add IPtables rules
+#description    :This script sets docker ready iptables rules.
+#author		    :Julian Psotta
+#email		    :julianpsotta@gmail.com
+#source         : https://github.com/MichaelsJP/ansible-role-bootstrap
+#date           :2021-01-03
+#usage		    :sudo bash firewall_rules.sh
+#==============================================================================
+
+today=$(date +%Y%m%d)
+div=======================================
 
 ############################
 ###### Default vars ########
