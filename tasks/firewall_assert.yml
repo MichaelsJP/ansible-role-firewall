@@ -69,5 +69,5 @@
 - name: test if IPTABLES is installed
   assert:
     that:
-      - "'iptables' in ansible_facts.packages"
+      - "iptables in ansible_facts.packages"
     quiet: yes
