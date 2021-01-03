@@ -245,6 +245,9 @@ $IPTABLES -A $COMBINED_CHAIN $INTERFACE -p tcp --match multiport --dports {{ boo
 $IPTABLES -A $COMBINED_CHAIN $INTERFACE -p udp --match multiport --dports {{ bootstrap_firewall_udp_ports_external }} -j ACCEPTLOG
 {% endif %}
 
+# Drop all incoming traffic on chain: $COMBINED_CHAIN from interface: $INTERFACE here.
+$IPTABLES -A $COMBINED_CHAIN -i $INTERFACE -j DROPLOG
+
 {% if bootstrap_firewall_tcp_ports_internal is defined and bootstrap_firewall_tcp_ports_internal | length >= 1 %}
 #  Allow ports only on specified networks only
 $IPTABLES -A $COMBINED_CHAIN ! -i $INTERFACE -p tcp --match multiport --dports {{ bootstrap_firewall_tcp_ports_internal }} -j ACCEPTLOG
