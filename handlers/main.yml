@@ -24,8 +24,3 @@
   service:
     name: firewall.service
     state: restarted
-
-- name: restart rsyslog
-  service:
-    name: "{{ rsyslog_service }}"
-    state: restarted

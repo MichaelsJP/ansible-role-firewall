@@ -234,6 +234,30 @@ $IPTABLES -A $COMBINED_CHAIN -m state --state ESTABLISHED,RELATED -j ACCEPT
 $IPTABLES -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 
 ##############################
+######## SSH Access ##########
+##############################
+{% if bootstrap_firewall_restricted_ssh_access_ip is defined and bootstrap_firewall_restricted_ssh_access_ip | length >= 4 %}
+# Restrict ssh access to specific ips and networks. Multiple need to be separated with commas. e.g. -s 0.0.0.0,127.0.0.1/8.
+$IPTABLES -A $COMBINED_CHAIN -p tcp -s {{ bootstrap_firewall_restricted_ssh_access_ip }} --dport 22 -j ACCEPTLOG
+{% endif %}
+
+# Only accept ssh if not on public interface. Else log and drop.
+$IPTABLES -A $COMBINED_CHAIN -i $INTERFACE -p tcp --dport 22 -j DROPSSHLOG
+$IPTABLES -A $COMBINED_CHAIN ! -i $INTERFACE -p tcp --dport 22 -j ACCEPTLOG
+
+#############################
+###### Miscellaneous ########
+#############################
+# Explicitly drop invalid incoming traffic
+$IPTABLES -A $COMBINED_CHAIN -m state --state INVALID -j DROP
+
+# Drop invalid outgoing traffic, too.
+$IPTABLES -A OUTPUT -m state --state INVALID -j DROP
+
+# If we would use NAT, INVALID packets would pass - BLOCK them anyways
+$IPTABLES -A FORWARD -m state --state INVALID -j DROP
+
+##############################
 #### Application includes ####
 ##############################
 
@@ -257,30 +281,6 @@ $IPTABLES -A $COMBINED_CHAIN ! -i $INTERFACE -p tcp --match multiport --dports {
 #  Allow ports only on specified networks only
 $IPTABLES -A $COMBINED_CHAIN ! -i $INTERFACE -p udp --match multiport --dports {{ bootstrap_firewall_udp_ports_internal }} -j ACCEPTLOG
 {% endif %}
-
-#############################
-###### Miscellaneous ########
-#############################
-# Explicitly drop invalid incoming traffic
-$IPTABLES -A $COMBINED_CHAIN -m state --state INVALID -j DROP
-
-# Drop invalid outgoing traffic, too.
-$IPTABLES -A OUTPUT -m state --state INVALID -j DROP
-
-# If we would use NAT, INVALID packets would pass - BLOCK them anyways
-$IPTABLES -A FORWARD -m state --state INVALID -j DROP
-
-##############################
-######## SSH Access ##########
-##############################
-{% if bootstrap_firewall_restricted_ssh_access_ip is defined and bootstrap_firewall_restricted_ssh_access_ip | length >= 4 %}
-# Restrict ssh access to specific ips and networks. Multiple need to be separated with commas. e.g. -s 0.0.0.0,127.0.0.1/8.
-$IPTABLES -A $COMBINED_CHAIN -p tcp -s {{ bootstrap_firewall_restricted_ssh_access_ip }} --dport 22 -j ACCEPTLOG
-{% endif %}
-
-# Only accept ssh if not on public interface. Else log and drop.
-$IPTABLES -A $COMBINED_CHAIN -i $INTERFACE -p tcp --dport 22 -j DROPSSHLOG
-$IPTABLES -A $COMBINED_CHAIN ! -i $INTERFACE -p tcp --dport 22 -j ACCEPTLOG
 
 ##############################################
 ###### Allow important outgoing ports ########
