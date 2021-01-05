@@ -1,0 +1,12 @@
+---
+- name: Make rsyslog configuration directory
+  file:
+    name: "/etc/rsyslog.d/"
+    state: directory
+    mode: "0755"
+
+- name: Copy custom iptables rsyslog config
+  template:
+    src: "00-rsyslog-iptables.j2"
+    dest: "/etc/rsyslog.d/00-rsyslog-iptables.conf"
+    mode: "0644"
