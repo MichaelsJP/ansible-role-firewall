@@ -29,3 +29,12 @@
   service:
     name: firewall.service
     enabled: yes
+
+- name: Reboot System in all cases.
+  debug:
+    msg: ""
+  notify:
+    - Reboot host
+  tags:
+    - molecule-notest
+    - notest

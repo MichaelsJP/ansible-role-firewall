@@ -8,8 +8,9 @@
 - name: Setup node firewall
   become: yes
   import_tasks: firewall.yml
-  notify:
-    - Reboot host
 
 - name: Flush collected handlers
   meta: flush_handlers
+  tags:
+    - molecule-notest
+    - notest
