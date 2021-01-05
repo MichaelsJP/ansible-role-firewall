@@ -24,16 +24,14 @@
     mode: '0755'
   notify:
     - reload systemd
-    - restart firewall
 
 - name: Enable Firewall rules (on startup).
   service:
     name: firewall.service
     enabled: yes
 
-- name: Restart firewall.service in all cases
+- name: Restart firewall.service through rebooting
   debug:
     msg: ""
   notify:
-    - restart firewall
     - Reboot host
