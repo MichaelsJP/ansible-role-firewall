@@ -13,3 +13,5 @@
 
 - name: Flush collected handlers
   meta: flush_handlers
+  tags:
+    - molecule-notest
