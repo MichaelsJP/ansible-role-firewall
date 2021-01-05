@@ -24,9 +24,17 @@
     mode: '0755'
   notify:
     - reload systemd
-    - Reboot host
 
 - name: Enable Firewall rules (on startup).
   service:
     name: firewall.service
     enabled: yes
+
+- name: Reboot System in all cases.
+  debug:
+    msg: ""
+  notify:
+    - Reboot host
+  tags:
+    - molecule-notest
+    - notest
