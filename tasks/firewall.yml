@@ -29,9 +29,3 @@
   service:
     name: firewall.service
     enabled: yes
-
-- name: Restart firewall.service through rebooting
-  debug:
-    msg: ""
-  notify:
-    - Reboot host
