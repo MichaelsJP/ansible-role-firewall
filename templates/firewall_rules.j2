@@ -179,6 +179,9 @@ $IPTABLES -A INPUT -s 127.0.0.0/8 -d 127.0.0.0/8 -i lo -j ACCEPT
 $IPTABLES -A INPUT -s 127.0.0.0/8 -d 0.0.0.0 -i lo -j ACCEPT
 $IPTABLES -A INPUT -s 0.0.0.0 -d 127.0.0.0/8 -i lo -j ACCEPT
 
+# Allow incoming connections related to existing allowed connections.
+$IPTABLES -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
 ##################################
 ###### Custom user chains ########
 ##################################
@@ -193,6 +196,9 @@ $IPTABLES -A INPUT -j $COMBINED_CHAIN
 {% if bootstrap_firewall_docker_secure %}
 $IPTABLES -A DOCKER-USER -i $INTERFACE -j $COMBINED_CHAIN
 {% endif %}
+
+# Allow incoming connections related to existing allowed connections.
+$IPTABLES -A $COMBINED_CHAIN -m state --state ESTABLISHED,RELATED -j ACCEPT
 
 ###########################
 ###### Custom ICMP ########
@@ -227,9 +233,6 @@ $IPTABLES -A $COMBINED_CHAIN -p icmp -j DROPICMPLOG
 $IPTABLES -A OUTPUT -p icmp -j DROPICMPLOG
 $IPTABLES -A FORWARD -p icmp -j DROPICMPLOG
 
-# Allow incoming connections related to existing allowed connections.
-$IPTABLES -A $COMBINED_CHAIN -m state --state ESTABLISHED,RELATED -j ACCEPT
-
 # Allow outgoing connections EXCEPT invalid
 $IPTABLES -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 
@@ -257,16 +260,30 @@ $IPTABLES -A OUTPUT -m state --state INVALID -j DROP
 # If we would use NAT, INVALID packets would pass - BLOCK them anyways
 $IPTABLES -A FORWARD -m state --state INVALID -j DROP
 
+##############################################
+###### Allow important outgoing ports ########
+##############################################
+
+{% if bootstrap_firewall_tcp_ports_outgoing is defined and bootstrap_firewall_tcp_ports_outgoing | length >= 1 %}
+#  Allow ports only on specified networks only
+$IPTABLES -A OUTPUT -p tcp --match multiport --dports {{ bootstrap_firewall_tcp_ports_outgoing }} -j ACCEPT
+{% endif %}
+
+{% if bootstrap_firewall_udp_ports_outgoing is defined and bootstrap_firewall_udp_ports_outgoing | length >= 1 %}
+#  Allow ports only on specified networks only
+$IPTABLES -A OUTPUT -p udp --match multiport --dports {{ bootstrap_firewall_udp_ports_outgoing }} -j ACCEPT
+{% endif %}
+
 ##############################
 #### Application includes ####
 ##############################
 
 {% if bootstrap_firewall_tcp_ports_external is defined and bootstrap_firewall_tcp_ports_external | length >= 1 %}
-$IPTABLES -A $COMBINED_CHAIN $INTERFACE -p tcp --match multiport --dports {{ bootstrap_firewall_tcp_ports_external }} -j ACCEPTLOG
+$IPTABLES -A $COMBINED_CHAIN -i $INTERFACE -p tcp --match multiport --dports {{ bootstrap_firewall_tcp_ports_external }} -j ACCEPTLOG
 {% endif %}
 
 {% if bootstrap_firewall_udp_ports_external is defined and bootstrap_firewall_udp_ports_external | length >= 1 %}
-$IPTABLES -A $COMBINED_CHAIN $INTERFACE -p udp --match multiport --dports {{ bootstrap_firewall_udp_ports_external }} -j ACCEPTLOG
+$IPTABLES -A $COMBINED_CHAIN -i $INTERFACE -p udp --match multiport --dports {{ bootstrap_firewall_udp_ports_external }} -j ACCEPTLOG
 {% endif %}
 
 # Drop all incoming traffic on chain: $COMBINED_CHAIN from interface: $INTERFACE here.
@@ -280,20 +297,6 @@ $IPTABLES -A $COMBINED_CHAIN ! -i $INTERFACE -p tcp --match multiport --dports {
 {% if bootstrap_firewall_udp_ports_internal is defined and bootstrap_firewall_udp_ports_internal | length >= 1 %}
 #  Allow ports only on specified networks only
 $IPTABLES -A $COMBINED_CHAIN ! -i $INTERFACE -p udp --match multiport --dports {{ bootstrap_firewall_udp_ports_internal }} -j ACCEPTLOG
-{% endif %}
-
-##############################################
-###### Allow important outgoing ports ########
-##############################################
-
-{% if bootstrap_firewall_tcp_ports_outgoing is defined and bootstrap_firewall_tcp_ports_outgoing | length >= 1 %}
-#  Allow ports only on specified networks only
-$IPTABLES -A OUTPUT -p tcp --match multiport --dports {{ bootstrap_firewall_tcp_ports_outgoing }} -j ACCEPT
-{% endif %}
-
-{% if bootstrap_firewall_udp_ports_outgoing is defined and bootstrap_firewall_udp_ports_outgoing | length >= 1 %}
-#  Allow ports only on specified networks only
-$IPTABLES -A OUTPUT -p udp --match multiport --dports {{ bootstrap_firewall_udp_ports_outgoing }} -j ACCEPT
 {% endif %}
 
 ###################################
