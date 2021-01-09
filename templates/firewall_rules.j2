@@ -291,11 +291,11 @@ $IPTABLES -A OUTPUT -p udp --match multiport --dports {{ bootstrap_firewall_udp_
 ##############################
 
 {% if bootstrap_firewall_tcp_ports_external is defined and bootstrap_firewall_tcp_ports_external | length >= 1 %}
-$IPTABLES -A $COMBINED_CHAIN $INTERFACE -p tcp --match multiport --dports {{ bootstrap_firewall_tcp_ports_external }} -j ACCEPTLOG
+$IPTABLES -A $COMBINED_CHAIN -i $INTERFACE -p tcp --match multiport --dports {{ bootstrap_firewall_tcp_ports_external }} -j ACCEPTLOG
 {% endif %}
 
 {% if bootstrap_firewall_udp_ports_external is defined and bootstrap_firewall_udp_ports_external | length >= 1 %}
-$IPTABLES -A $COMBINED_CHAIN $INTERFACE -p udp --match multiport --dports {{ bootstrap_firewall_udp_ports_external }} -j ACCEPTLOG
+$IPTABLES -A $COMBINED_CHAIN -i $INTERFACE -p udp --match multiport --dports {{ bootstrap_firewall_udp_ports_external }} -j ACCEPTLOG
 {% endif %}
 
 # Drop all incoming traffic on chain: $COMBINED_CHAIN from interface: $INTERFACE here.
