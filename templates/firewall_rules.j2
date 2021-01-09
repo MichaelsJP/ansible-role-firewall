@@ -95,15 +95,12 @@ $IPTABLES -t mangle -P POSTROUTING ACCEPT
 ###### Default cleanup ########
 ###############################
 
-# Delete all
-$IPTABLES -F
+# Flush non-docker default chains
+$IPTABLES -F INPUT
+$IPTABLES -F FORWARD
+$IPTABLES -F OUTPUT
 $IPTABLES -t nat -F
 $IPTABLES -t mangle -F
-
-# Delete all
-$IPTABLES -X
-$IPTABLES -t nat -X
-$IPTABLES -t mangle -X
 
 # Zero all packets and counters.
 $IPTABLES -Z
@@ -167,6 +164,44 @@ $IPTABLES -A RELATED_ICMP -p icmp --icmp-type time-exceeded -j ACCEPTICMPLOG
 $IPTABLES -A RELATED_ICMP -p icmp --icmp-type parameter-problem -j ACCEPTICMPLOG
 $IPTABLES -A RELATED_ICMP -j DROPICMPLOG
 
+##################################
+###### Custom user chains ########
+##################################
+# Create custom chains
+chain_exists DOCKER-USER || create_chain DOCKER-USER
+chain_exists $COMBINED_CHAIN || create_chain $COMBINED_CHAIN
+
+# Flush custom chains
+$IPTABLES -F DOCKER-USER
+$IPTABLES -F $COMBINED_CHAIN
+
+# Chain INPUT and DOCKER-USER to $COMBINED_CHAIN
+$IPTABLES -A INPUT -j $COMBINED_CHAIN
+{% if bootstrap_firewall_docker_secure %}
+$IPTABLES -A DOCKER-USER -i $INTERFACE -j $COMBINED_CHAIN
+{% endif %}
+
+###################################
+###### Default policies ########
+###################################
+# Default chain policies
+$IPTABLES --policy INPUT   ACCEPT;
+$IPTABLES --policy OUTPUT  ACCEPT;
+$IPTABLES --policy FORWARD ACCEPT;
+
+####################################
+###### Drop Invalid Traffic ########
+####################################
+# Explicitly drop invalid incoming traffic
+$IPTABLES -A $COMBINED_CHAIN -m state --state INVALID -j DROP
+
+# Drop invalid outgoing traffic, too.
+$IPTABLES -A OUTPUT -m state --state INVALID -j DROP
+
+# If we would use NAT, INVALID packets would pass - BLOCK them anyways
+$IPTABLES -A FORWARD -m state --state INVALID -j DROP
+
+
 ###################################
 ###### Special connections ########
 ###################################
@@ -174,24 +209,22 @@ $IPTABLES -A RELATED_ICMP -j DROPICMPLOG
 $IPTABLES -A $COMBINED_CHAIN -i lo -j ACCEPT
 $IPTABLES -A OUTPUT -o lo -j ACCEPT
 
-# Allow local programs that use loopback (Unix sockets)
-$IPTABLES -A INPUT -s 127.0.0.0/8 -d 127.0.0.0/8 -i lo -j ACCEPT
-$IPTABLES -A INPUT -s 127.0.0.0/8 -d 0.0.0.0 -i lo -j ACCEPT
-$IPTABLES -A INPUT -s 0.0.0.0 -d 127.0.0.0/8 -i lo -j ACCEPT
-
-##################################
-###### Custom user chains ########
-##################################
-
-# Create custom chains
-chain_exists DOCKER-USER || create_chain DOCKER-USER
-chain_exists $COMBINED_CHAIN || create_chain $COMBINED_CHAIN
-
-# Chain INPUT and DOCKER-USER to FILTERS
-$IPTABLES -A INPUT -j $COMBINED_CHAIN
+# Allow connections related to existing allowed connections.
+$IPTABLES -A $COMBINED_CHAIN -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+$IPTABLES -A OUTPUT -m conntrack --ctstate ESTABLISHED -j ACCEPT
 
 {% if bootstrap_firewall_docker_secure %}
-$IPTABLES -A DOCKER-USER -i $INTERFACE -j $COMBINED_CHAIN
+# Allow Docker traffic for docker0 and br- network wildcard
+$IPTABLES -A $COMBINED_CHAIN -i docker0 -j ACCEPT
+$IPTABLES -A $COMBINED_CHAIN -i br-+ -j ACCEPT
+
+# Forward rules for docker0 and br- networks with wildcard
+$IPTABLES -A FORWARD -i docker0 -j ACCEPT
+$IPTABLES -A FORWARD -i br-+ -j ACCEPT
+
+# For testing
+# $IPTABLES -A FORWARD -o docker0 -j ACCEPT
+# $IPTABLES -A FORWARD -o br-+ -j ACCEPT
 {% endif %}
 
 ###########################
@@ -227,12 +260,6 @@ $IPTABLES -A $COMBINED_CHAIN -p icmp -j DROPICMPLOG
 $IPTABLES -A OUTPUT -p icmp -j DROPICMPLOG
 $IPTABLES -A FORWARD -p icmp -j DROPICMPLOG
 
-# Allow incoming connections related to existing allowed connections.
-$IPTABLES -A $COMBINED_CHAIN -m state --state ESTABLISHED,RELATED -j ACCEPT
-
-# Allow outgoing connections EXCEPT invalid
-$IPTABLES -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-
 ##############################
 ######## SSH Access ##########
 ##############################
@@ -244,18 +271,6 @@ $IPTABLES -A $COMBINED_CHAIN -p tcp -s {{ bootstrap_firewall_restricted_ssh_acce
 # Only accept ssh if not on public interface. Else log and drop.
 $IPTABLES -A $COMBINED_CHAIN -i $INTERFACE -p tcp --dport 22 -j DROPSSHLOG
 $IPTABLES -A $COMBINED_CHAIN ! -i $INTERFACE -p tcp --dport 22 -j ACCEPTLOG
-
-#############################
-###### Miscellaneous ########
-#############################
-# Explicitly drop invalid incoming traffic
-$IPTABLES -A $COMBINED_CHAIN -m state --state INVALID -j DROP
-
-# Drop invalid outgoing traffic, too.
-$IPTABLES -A OUTPUT -m state --state INVALID -j DROP
-
-# If we would use NAT, INVALID packets would pass - BLOCK them anyways
-$IPTABLES -A FORWARD -m state --state INVALID -j DROP
 
 ##############################
 #### Application includes ####
@@ -307,18 +322,6 @@ $IPTABLES -A FORWARD -i $INTERFACE -j DROPFORWARDLOG
 $IPTABLES -A $COMBINED_CHAIN -j REJECTLOG
 $IPTABLES -A OUTPUT -j REJECTLOG
 $IPTABLES -A FORWARD -j REJECTLOG
-
-######################################
-########## Restart Services ##########
-######################################
-
-{% if bootstrap_firewall_docker_secure %}
-# Restart Docker
-if check_programm "docker"; then
-  say "Restart docker"
-  systemctl restart docker
-fi
-{% endif %}
 
 ##########################
 ########## Exit ##########
