@@ -214,7 +214,7 @@ $IPTABLES -A $COMBINED_CHAIN -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEP
 $IPTABLES -A OUTPUT -m conntrack --ctstate ESTABLISHED -j ACCEPT
 
 {% if bootstrap_firewall_docker_secure %}
-# Allow Docker traffic for docker0 and br- network wildcard
+# Allow Docker traffic for docker0 and br- network wildcard in the combined chain
 $IPTABLES -A $COMBINED_CHAIN -i docker0 -j ACCEPT
 $IPTABLES -A $COMBINED_CHAIN -i br-+ -j ACCEPT
 
@@ -222,9 +222,9 @@ $IPTABLES -A $COMBINED_CHAIN -i br-+ -j ACCEPT
 $IPTABLES -A FORWARD -i docker0 -j ACCEPT
 $IPTABLES -A FORWARD -i br-+ -j ACCEPT
 
-# For testing
-# $IPTABLES -A FORWARD -o docker0 -j ACCEPT
-# $IPTABLES -A FORWARD -o br-+ -j ACCEPT
+# Allow docker to communicate with itself and the host.
+$IPTABLES -A FORWARD -o docker0 -j ACCEPT
+$IPTABLES -A FORWARD -o br-+ -j ACCEPT
 {% endif %}
 
 ###########################
