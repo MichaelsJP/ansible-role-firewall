@@ -323,6 +323,15 @@ $IPTABLES -A $COMBINED_CHAIN -j REJECTLOG
 $IPTABLES -A OUTPUT -j REJECTLOG
 $IPTABLES -A FORWARD -j REJECTLOG
 
+######################################
+########## Restart Services ##########
+######################################
+# Restart Docker
+if check_programm "docker"; then
+  say "Restart docker"
+  systemctl restart docker
+fi
+
 ##########################
 ########## Exit ##########
 ##########################
