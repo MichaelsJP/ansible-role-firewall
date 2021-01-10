@@ -72,11 +72,11 @@ bootstrap_firewall_restrict_incoming_icmp_to_internal: true # When icmp is reach
 # Else docker related connections will be open to the public completely.
 bootstrap_firewall_docker_secure: true
 
-# Restrict ssh access to specific ips and networks.
+# Allow all access to specific ips and networks.
 # This is especially handy if an external backup routine like borg needs SSH access from a static ip.
 # SSH is always denied from external besides the ips or ip ranges defined below.
 # Only enable when necessary! Activating it will put pressure on the cpu, when checking ssh requests against ip addresses.
-bootstrap_firewall_restricted_ssh_access_ip: [ ] # Multiple need to be separated with commas. e.g. 0.0.0.0,127.0.0.1/8.
+bootstrap_firewall_restricted_access_ip: [ ] # Multiple need to be separated with commas. e.g. 0.0.0.0,127.0.0.1/8.
 
 ```
 
