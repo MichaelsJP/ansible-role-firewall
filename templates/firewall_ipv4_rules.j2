@@ -207,7 +207,8 @@ $IPTABLES -A OUTPUT -o lo -j ACCEPT
 
 # Allow connections related to existing allowed connections.
 $IPTABLES -A $COMBINED_CHAIN -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-$IPTABLES -A OUTPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+$IPTABLES -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+$IPTABLES -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
 {% if bootstrap_firewall_docker_secure %}
 # Allow Docker traffic for docker0 and br- network wildcard in the combined chain
