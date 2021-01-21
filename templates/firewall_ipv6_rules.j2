@@ -1,12 +1,12 @@
 #!/bin/bash
 # {{ ansible_managed }}
-#title          :Add IPtables rules
-#description    :This script sets docker ready iptables rules.
+#title          :Add IPtables IPv6 rules
+#description    :This script sets docker ready iptables IPv6 rules.
 #author		    :Julian Psotta
 #email		    :julianpsotta@gmail.com
-#source         : https://github.com/MichaelsJP/ansible-role-bootstrap
-#date           :2021-01-03
-#usage		    :sudo bash firewall_rules.sh
+#source         : https://github.com/MichaelsJP/ansible-role-firewall
+#date           :2021-01-21
+#usage		    :sudo bash firewall_ipv6_rules.j2
 #==============================================================================
 
 today=$(date +%Y%m%d)
@@ -15,7 +15,7 @@ div=======================================
 ############################
 ###### Default vars ########
 ############################
-IPTABLES="/sbin/iptables"
+IPTABLES="/sbin/ip6tables"
 # Log settigns
 LOG="LOG --log-level debug --log-tcp-sequence --log-tcp-options"
 LOG="$LOG --log-ip-options"
@@ -25,7 +25,7 @@ RLIMIT="-m limit --limit 3/s --limit-burst 30"
 INTERFACE="{{ bootstrap_firewall_interface_name|default("eth0") }}"
 
 # Script Name
-SCRIPT_NAME="FirewallRules"
+SCRIPT_NAME="FirewallIPv6Rules"
 # Combined Chain
 COMBINED_CHAIN="FILTERS"
 
@@ -33,7 +33,7 @@ COMBINED_CHAIN="FILTERS"
 ###### Helper functions ########
 ################################
 # Set this variable in the main Script to give error and other print statements a proper script name.
-SCRIPT_NAME=${SCRIPT_NAME:-"FIREWALL_SCRIPT"}
+SCRIPT_NAME=${SCRIPT_NAME:-"FIREWALL_IPv6_SCRIPT"}
 say() {
   echo -e "\e[44m""$SCRIPT_NAME:\e[49m $1" >&2
 }
@@ -64,15 +64,13 @@ check_programm() {
 ################################
 ###### Default policies ########
 ################################
-# Set up logging into iptables file
-if ! grep -qxF ':msg,contains,"IPTABLES" -/var/log/iptables.log' /etc/rsyslog.d/00-rsyslog-iptables.conf; then
-  rm -f "/var/log/iptables.log"
-  echo ':msg,contains,"IPTABLES" -/var/log/iptables.log' >>/etc/rsyslog.d/00-rsyslog-iptables.conf
-  echo '& stop' >>/etc/rsyslog.d/00-rsyslog-iptables.conf
-elif ! grep -qxF '& stop' /etc/rsyslog.d/00-rsyslog-iptables.conf; then
-  rm -f "/var/log/iptables.log"
-  echo ':msg,contains,"IPTABLES" -/var/log/iptables.log' >>/etc/rsyslog.d/00-rsyslog-iptables.conf
-  echo '& stop' >>/etc/rsyslog.d/00-rsyslog-iptables.conf
+# Set up logging into ip6tables file
+if ! grep -qxF ':msg,contains,"IP6TABLES" -/var/log/ip6tables.log' /etc/rsyslog.d/01-rsyslog-ip6tables.conf; then
+  echo ':msg,contains,"IP6TABLES" -/var/log/ip6tables.log' >>/etc/rsyslog.d/01-rsyslog-ip6tables.conf
+  echo '& stop' >>/etc/rsyslog.d/01-rsyslog-ip6tables.conf
+elif ! grep -qxF '& stop' /etc/rsyslog.d/01-rsyslog-ip6tables.conf; then
+  echo ':msg,contains,"IP6TABLES" -/var/log/ip6tables.log' >>/etc/rsyslog.d/01-rsyslog-ip6tables.conf
+  echo '& stop' >>/etc/rsyslog.d/01-rsyslog-ip6tables.conf
 fi
 
 # Drop everything by default.
@@ -113,55 +111,55 @@ $IPTABLES -t mangle -Z
 
 # LOG packets, then ACCEPT.
 $IPTABLES -N ACCEPTLOG
-$IPTABLES -A ACCEPTLOG -j $LOG $RLIMIT --log-prefix "IPTABLES-ACCEPT "
+$IPTABLES -A ACCEPTLOG -j $LOG $RLIMIT --log-prefix "IP6TABLES-ACCEPT "
 $IPTABLES -A ACCEPTLOG -j ACCEPT
 
 # LOG icmp packets, then ACCEPT.
 $IPTABLES -N ACCEPTICMPLOG
-$IPTABLES -A ACCEPTICMPLOG -j $LOG $RLIMIT --log-prefix "IPTABLES-ICMP-ACCEPT "
+$IPTABLES -A ACCEPTICMPLOG -j $LOG $RLIMIT --log-prefix "IP6TABLES-ICMP-ACCEPT "
 $IPTABLES -A ACCEPTICMPLOG -j ACCEPT
 
 # LOG outgoing packets, then ACCEPT.
 $IPTABLES -N ACCEPTOUPUTLOG
-$IPTABLES -A ACCEPTOUPUTLOG -j $LOG $RLIMIT --log-prefix "IPTABLES-OUTPUT-ACCEPT "
+$IPTABLES -A ACCEPTOUPUTLOG -j $LOG $RLIMIT --log-prefix "IP6TABLES-OUTPUT-ACCEPT "
 $IPTABLES -A ACCEPTOUPUTLOG -j ACCEPT
 
 # LOG packets, then DROP.
 $IPTABLES -N DROPLOG
-$IPTABLES -A DROPLOG -j $LOG $RLIMIT --log-prefix "IPTABLES-DROP "
+$IPTABLES -A DROPLOG -j $LOG $RLIMIT --log-prefix "IP6TABLES-DROP "
 $IPTABLES -A DROPLOG -j DROP
 
 # LOG icmp packets, then DROP.
 $IPTABLES -N DROPICMPLOG
-$IPTABLES -A DROPICMPLOG -j $LOG $RLIMIT --log-prefix "IPTABLES-ICMP-DROP "
+$IPTABLES -A DROPICMPLOG -j $LOG $RLIMIT --log-prefix "IP6TABLES-ICMP-DROP "
 $IPTABLES -A DROPICMPLOG -j DROP
 
 # LOG ssh packets, then DROP.
 $IPTABLES -N DROPSSHLOG
-$IPTABLES -A DROPSSHLOG -j $LOG $RLIMIT --log-prefix "IPTABLES-SSH-DROP "
+$IPTABLES -A DROPSSHLOG -j $LOG $RLIMIT --log-prefix "IP6TABLES-SSH-DROP "
 $IPTABLES -A DROPSSHLOG -j DROP
 
 # LOG outgoing packets, then DROP.
 $IPTABLES -N DROPOUTPUTLOG
-$IPTABLES -A DROPOUTPUTLOG -j $LOG $RLIMIT --log-prefix "IPTABLES-OUTPUT-DROP "
+$IPTABLES -A DROPOUTPUTLOG -j $LOG $RLIMIT --log-prefix "IP6TABLES-OUTPUT-DROP "
 $IPTABLES -A DROPOUTPUTLOG -j DROP
 
 # LOG outgoing packets, then DROP.
 $IPTABLES -N DROPFORWARDLOG
-$IPTABLES -A DROPFORWARDLOG -j $LOG $RLIMIT --log-prefix "IPTABLES-FORWARD-DROP "
+$IPTABLES -A DROPFORWARDLOG -j $LOG $RLIMIT --log-prefix "IP6TABLES-FORWARD-DROP "
 $IPTABLES -A DROPFORWARDLOG -j DROP
 
 # LOG packets, then REJECT.
 # TCP packets are rejected with a TCP reset.
 $IPTABLES -N REJECTLOG
-$IPTABLES -A REJECTLOG -j $LOG $RLIMIT --log-prefix "IPTABLES-REJECT "
+$IPTABLES -A REJECTLOG -j $LOG $RLIMIT --log-prefix "IP6TABLES-REJECT "
 $IPTABLES -A REJECTLOG -p tcp -j REJECT --reject-with tcp-reset
 $IPTABLES -A REJECTLOG -j REJECT
 
 $IPTABLES -N RELATED_ICMP
-$IPTABLES -A RELATED_ICMP -p icmp --icmp-type destination-unreachable -j ACCEPTICMPLOG
-$IPTABLES -A RELATED_ICMP -p icmp --icmp-type time-exceeded -j ACCEPTICMPLOG
-$IPTABLES -A RELATED_ICMP -p icmp --icmp-type parameter-problem -j ACCEPTICMPLOG
+$IPTABLES -A RELATED_ICMP -p ipv6-icmp --icmpv6-type destination-unreachable -j ACCEPTICMPLOG
+$IPTABLES -A RELATED_ICMP -p ipv6-icmp --icmpv6-type time-exceeded -j ACCEPTICMPLOG
+$IPTABLES -A RELATED_ICMP -p ipv6-icmp --icmpv6-type parameter-problem -j ACCEPTICMPLOG
 $IPTABLES -A RELATED_ICMP -j DROPICMPLOG
 
 ##################################
@@ -185,9 +183,13 @@ $IPTABLES -A DOCKER-USER -i $INTERFACE -j $COMBINED_CHAIN
 ###### Default policies ########
 ###################################
 # Default chain policies
-$IPTABLES --policy INPUT   ACCEPT;
-$IPTABLES --policy OUTPUT  ACCEPT;
-$IPTABLES --policy FORWARD ACCEPT;
+$IPTABLES -P $COMBINED_CHAIN DROP
+$IPTABLES -P FORWARD DROP
+{% if bootstrap_firewall_block_output is defined and bootstrap_firewall_block_output %}
+$IPTABLES -P OUTPUT DROP
+{% else %}
+$IPTABLES -P OUTPUT ACCEPT
+{% endif %}
 
 ####################################
 ###### Drop Invalid Traffic ########
@@ -201,6 +203,13 @@ $IPTABLES -A OUTPUT -m state --state INVALID -j DROP
 # If we would use NAT, INVALID packets would pass - BLOCK them anyways
 $IPTABLES -A FORWARD -m state --state INVALID -j DROP
 
+#############################
+###### Anti-spoofing ########
+#############################
+$IPTABLES -A $COMBINED_CHAIN ! -i lo -s ::1/128 -j DROP
+$IPTABLES -A $COMBINED_CHAIN -i $INTERFACE -s FC00::/7 -j DROP
+$IPTABLES -A FORWARD -s ::1/128 -j DROP
+$IPTABLES -A FORWARD -i $INTERFACE -s FC00::/7 -j DROP
 
 ###################################
 ###### Special connections ########
@@ -211,7 +220,13 @@ $IPTABLES -A OUTPUT -o lo -j ACCEPT
 
 # Allow connections related to existing allowed connections.
 $IPTABLES -A $COMBINED_CHAIN -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-$IPTABLES -A OUTPUT -m conntrack --ctstate ESTABLISHED -j ACCEPT
+$IPTABLES -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+$IPTABLES -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+{% if bootstrap_firewall_block_ipv6 is defined and bootstrap_firewall_block_ipv6 %}
+# Block all ipv6 traffic by default
+$IPTABLES -I $COMBINED_CHAIN DROPLOG
+{% endif %}
 
 {% if bootstrap_firewall_docker_secure %}
 # Allow Docker traffic for docker0 and br- network wildcard in the combined chain
@@ -232,41 +247,46 @@ $IPTABLES -A FORWARD -o br-+ -j ACCEPT
 ###########################
 
 # First, drop all fragmented ICMP packets (almost always malicious).
-$IPTABLES -A $COMBINED_CHAIN -p icmp --fragment -j DROPICMPLOG
-$IPTABLES -A OUTPUT -p icmp --fragment -j DROPICMPLOG
-$IPTABLES -A FORWARD -p icmp --fragment -j DROPICMPLOG
+$IPTABLES -A $COMBINED_CHAIN -p ipv6-icmp --fragment -j DROPICMPLOG
+$IPTABLES -A OUTPUT -p ipv6-icmp --fragment -j DROPICMPLOG
+$IPTABLES -A FORWARD -p ipv6-icmp --fragment -j DROPICMPLOG
 
 # Allow all ESTABLISHED ICMP traffic.
-$IPTABLES -A $COMBINED_CHAIN -p icmp -m state --state ESTABLISHED -j ACCEPTICMPLOG $RLIMIT
-$IPTABLES -A OUTPUT -p icmp -m state --state ESTABLISHED -j ACCEPTICMPLOG $RLIMIT
+$IPTABLES -A $COMBINED_CHAIN -p ipv6-icmp -m state --state ESTABLISHED -j ACCEPTICMPLOG $RLIMIT
+$IPTABLES -A OUTPUT -p ipv6-icmp -m state --state ESTABLISHED -j ACCEPTICMPLOG $RLIMIT
 
 # Allow some parts of the RELATED ICMP traffic, block the rest.
-$IPTABLES -A $COMBINED_CHAIN -p icmp -m state --state RELATED -j RELATED_ICMP $RLIMIT
-$IPTABLES -A OUTPUT -p icmp -m state --state RELATED -j RELATED_ICMP $RLIMIT
+$IPTABLES -A $COMBINED_CHAIN -p ipv6-icmp -m state --state RELATED -j RELATED_ICMP $RLIMIT
+$IPTABLES -A OUTPUT -p ipv6-icmp -m state --state RELATED -j RELATED_ICMP $RLIMIT
 
 # Define the icmp incoming rules.
 {% if  bootstrap_firewall_restrict_incoming_icmp_to_internal %}
 # Only allow icmp from internal. Use drop to hide the server.
-$IPTABLES -A $COMBINED_CHAIN -p icmp -i $INTERFACE --icmp-type echo-request -j DROPICMPLOG $RLIMIT
+$IPTABLES -A $COMBINED_CHAIN -p ipv6-icmp -i $INTERFACE --icmpv6-type echo-request -j DROPICMPLOG $RLIMIT
 {% endif %}
 
-$IPTABLES -A $COMBINED_CHAIN -p icmp --icmp-type echo-request -j ACCEPTICMPLOG $RLIMIT
+$IPTABLES -A $COMBINED_CHAIN -p ipv6-icmp --icmpv6-type echo-request -j ACCEPTICMPLOG $RLIMIT
 
 # Allow outgoing ICMP echo requests (ping), but only rate-limited.
-$IPTABLES -A OUTPUT -p icmp --icmp-type echo-request -j ACCEPTOUPUTLOG $RLIMIT
+$IPTABLES -A OUTPUT -p ipv6-icmp --icmpv6-type echo-request -j ACCEPTOUPUTLOG $RLIMIT
 
 # Drop any other ICMP traffic.
-$IPTABLES -A $COMBINED_CHAIN -p icmp -j DROPICMPLOG
-$IPTABLES -A OUTPUT -p icmp -j DROPICMPLOG
-$IPTABLES -A FORWARD -p icmp -j DROPICMPLOG
+$IPTABLES -A $COMBINED_CHAIN -p ipv6-icmp -j DROPICMPLOG
+$IPTABLES -A OUTPUT -p ipv6-icmp -j DROPICMPLOG
+$IPTABLES -A FORWARD -p ipv6-icmp -j DROPICMPLOG
+
+###############################
+##### Unrestricted Access #####
+###############################
+
+{% if bootstrap_firewall_restricted_access_ip is defined and bootstrap_firewall_restricted_access_ip | length >= 4 %}
+# Allow all access to specific ips and networks. Multiple need to be separated with commas. e.g. -s 0.0.0.0,127.0.0.1/8.
+$IPTABLES -A $COMBINED_CHAIN -p tcp -s {{ bootstrap_firewall_restricted_access_ip }} -j ACCEPTLOG
+{% endif %}
 
 ##############################
 ######## SSH Access ##########
 ##############################
-{% if bootstrap_firewall_restricted_access_ip is defined and bootstrap_firewall_restricted_access_ip | length >= 4 %}
-# Restrict ssh access to specific ips and networks. Multiple need to be separated with commas. e.g. -s 0.0.0.0,127.0.0.1/8.
-$IPTABLES -A $COMBINED_CHAIN -p tcp -s {{ bootstrap_firewall_restricted_access_ip }} --dport 22 -j ACCEPTLOG
-{% endif %}
 
 # Only accept ssh if not on public interface. Else log and drop.
 $IPTABLES -A $COMBINED_CHAIN -i $INTERFACE -p tcp --dport 22 -j DROPSSHLOG
@@ -289,11 +309,6 @@ $IPTABLES -A OUTPUT -p udp --match multiport --dports {{ bootstrap_firewall_udp_
 ##############################
 #### Application includes ####
 ##############################
-
-{% if bootstrap_firewall_restricted_access_ip is defined and bootstrap_firewall_restricted_access_ip | length >= 4 %}
-# Allow all access to specific ips and networks. Multiple need to be separated with commas. e.g. -s 0.0.0.0,127.0.0.1/8.
-$IPTABLES -A $COMBINED_CHAIN -p tcp -s {{ bootstrap_firewall_restricted_access_ip }} -j ACCEPTLOG
-{% endif %}
 
 {% if bootstrap_firewall_tcp_ports_external is defined and bootstrap_firewall_tcp_ports_external | length >= 1 %}
 $IPTABLES -A $COMBINED_CHAIN -i $INTERFACE -p tcp --match multiport --dports {{ bootstrap_firewall_tcp_ports_external }} -j ACCEPTLOG
