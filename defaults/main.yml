@@ -19,7 +19,7 @@ bootstrap_firewall_tcp_ports_outgoing: "21,22,25,43,80,443,465,587,995" # Allow 
 
 # Define allowed outgoing udp ports. Multiple ports with , separated. e.g. '80,443,8080'.
 # DNS and ntp are needed for the system to work properly.
-bootstrap_firewall_udp_ports_outgoing: "53,123" # Allow on all interfaces. Default: (dns, ntp)
+bootstrap_firewall_udp_ports_outgoing: "53,67,68,123" # Allow on all interfaces. Default: (dns, dhcp, ntp)
 
 # Decide if iptables will turn of connections from external sources.
 bootstrap_firewall_restrict_incoming_icmp_to_internal: true # When icmp is reachable and not dropped, the outside knows the server is not reachable but online and botnets will continue hammering it.
