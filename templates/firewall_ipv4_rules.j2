@@ -4,9 +4,9 @@
 #description    :This script sets docker ready iptables IPv4 rules.
 #author		    :Julian Psotta
 #email		    :julianpsotta@gmail.com
-#source         : https://github.com/MichaelsJP/ansible-role-bootstrap
+#source         : https://github.com/MichaelsJP/ansible-role-firewall
 #date           :2021-01-03
-#usage		    :sudo bash firewall_rules.sh
+#usage		    :sudo bash firewall_ipv4_rules.j2
 #==============================================================================
 
 today=$(date +%Y%m%d)
@@ -25,7 +25,7 @@ RLIMIT="-m limit --limit 3/s --limit-burst 30"
 INTERFACE="{{ bootstrap_firewall_interface_name|default("eth0") }}"
 
 # Script Name
-SCRIPT_NAME="FirewallRules"
+SCRIPT_NAME="FirewallIPv4Rules"
 # Combined Chain
 COMBINED_CHAIN="FILTERS"
 
@@ -33,7 +33,7 @@ COMBINED_CHAIN="FILTERS"
 ###### Helper functions ########
 ################################
 # Set this variable in the main Script to give error and other print statements a proper script name.
-SCRIPT_NAME=${SCRIPT_NAME:-"FIREWALL_SCRIPT"}
+SCRIPT_NAME=${SCRIPT_NAME:-"FIREWALL_IPv4_SCRIPT"}
 say() {
   echo -e "\e[44m""$SCRIPT_NAME:\e[49m $1" >&2
 }
