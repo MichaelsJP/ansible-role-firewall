@@ -75,11 +75,6 @@ elif ! grep -qxF '& stop' /etc/rsyslog.d/00-rsyslog-iptables.conf; then
   echo '& stop' >>/etc/rsyslog.d/00-rsyslog-iptables.conf
 fi
 
-# Drop everything by default.
-$IPTABLES -P INPUT DROP
-$IPTABLES -P FORWARD DROP
-$IPTABLES -P OUTPUT DROP
-
 # Set the nat/mangle/raw tables' chains to ACCEPT
 $IPTABLES -t nat -P PREROUTING ACCEPT
 $IPTABLES -t nat -P OUTPUT ACCEPT
@@ -185,9 +180,10 @@ $IPTABLES -A DOCKER-USER -i $INTERFACE -j $COMBINED_CHAIN
 ###### Default policies ########
 ###################################
 # Default chain policies
-$IPTABLES --policy INPUT   ACCEPT;
-$IPTABLES --policy OUTPUT  ACCEPT;
-$IPTABLES --policy FORWARD ACCEPT;
+$IPTABLES -P $COMBINED_CHAIN DROP
+$IPTABLES -P FORWARD DROP
+$IPTABLES -P OUTPUT DROP
+
 
 ####################################
 ###### Drop Invalid Traffic ########
