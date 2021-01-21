@@ -10,7 +10,7 @@
 - name: Copy script which adds IPtables rules.
   become: yes
   template:
-    src: firewall_rules.j2
+    src: firewall_ipv4_rules.j2
     dest: "/etc/firewall/firewall_rules.sh"
     mode: a+x
 
