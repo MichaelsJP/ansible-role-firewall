@@ -182,8 +182,11 @@ $IPTABLES -A DOCKER-USER -i $INTERFACE -j $COMBINED_CHAIN
 # Default chain policies
 $IPTABLES -P $COMBINED_CHAIN DROP
 $IPTABLES -P FORWARD DROP
+{% if bootstrap_firewall_block_output is defined and bootstrap_firewall_block_output %}
 $IPTABLES -P OUTPUT DROP
-
+{% else %}
+$IPTABLES -P OUTPUT ACCEPT
+{% endif %}
 
 ####################################
 ###### Drop Invalid Traffic ########
