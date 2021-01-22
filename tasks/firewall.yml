@@ -24,7 +24,7 @@
 
 - name: Create systemd service to add Firewall IPv4 rules to iptables.
   copy:
-    src: firewall.service
+    src: firewall_ipv4.service
     dest: "/etc/systemd/system/firewall_ipv4.service"
     force: yes
     owner: root
@@ -35,7 +35,7 @@
 
 - name: Create systemd service to add Firewall IPv6 rules to ip6tables.
   copy:
-    src: firewall.service
+    src: firewall_ipv6.service
     dest: "/etc/systemd/system/firewall_ipv6.service"
     force: yes
     owner: root
