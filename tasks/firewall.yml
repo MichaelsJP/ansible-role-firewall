@@ -44,7 +44,12 @@
   notify:
     - reload systemd
 
-- name: Enable Firewall rules (on startup).
+- name: Enable Firewall IPv4 rules (on startup).
   service:
-    name: firewall.service
+    name: firewall_ipv4.service
+    enabled: yes
+
+- name: Enable Firewall IPv6 rules (on startup).
+  service:
+    name: firewall_ipv6.service
     enabled: yes
