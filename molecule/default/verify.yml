@@ -8,24 +8,46 @@
     - name: check if connection still works
       ping:
 
-    - name: Check that the firewall.service exists
+    - name: Check that the firewall_ipv4.service exists
       stat:
-        path: /etc/systemd/system/firewall.service
-      register: firewall_service_result
+        path: /etc/systemd/system/firewall_ipv4.service
+      register: firewall_ipv4_service_result
 
-    - name: Check that the firewall_rules.sh exists
+    - name: Check that the firewall_ipv4_rules.sh exists
       stat:
-        path: /etc/firewall/firewall_rules.sh
-      register: firewall_rules_result
+        path: /etc/firewall/firewall_ipv4_rules.sh
+      register: firewall_ipv4_rules_result
 
-    - name: Fail if /etc/systemd/system/firewall.service file is not present
+    - name: Fail if /etc/systemd/system/firewall_ipv4.service file is not present
       fail:
         msg: The system may not be provisioned according.
       when:
-        - (not firewall_service_result.stat.exists)
+        - (not firewall_ipv4_service_result.stat.exists)
 
-    - name: Fail if /etc/firewall/firewall_rules.sh is not present
+    - name: Fail if /etc/firewall/firewall_ipv4_rules.sh is not present
       fail:
         msg: The system may not be provisioned according.
       when:
-        - (not firewall_rules_result.stat.exists)
+        - (not firewall_ipv4_rules_result.stat.exists)
+
+    - name: Check that the firewall_ipv6.service exists
+      stat:
+        path: /etc/systemd/system/firewall_ipv6.service
+      register: firewall_ipv6_service_result
+
+    - name: Check that the firewall_ipv6_rules.sh exists
+      stat:
+        path: /etc/firewall/firewall_ipv6_rules.sh
+      register: firewall_ipv6_rules_result
+
+    - name: Fail if /etc/systemd/system/firewall_ipv6.service file is not present
+      fail:
+        msg: The system may not be provisioned according.
+      when:
+        - (not firewall_ipv6_service_result.stat.exists)
+
+    - name: Fail if /etc/firewall/firewall_ipv6_rules.sh is not present
+      fail:
+        msg: The system may not be provisioned according.
+      when:
+        - (not firewall_ipv6_rules_result.stat.exists)

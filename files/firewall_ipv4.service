@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# /etc/systemd/system/firewall_ipv4.service
+
+[Unit]
+Description=Add Firewall IPv4 rules to iptables
+
+[Service]
+Type=oneshot
+ExecStart=/etc/firewall/firewall_ipv4_rules.sh
+
+[Install]
+WantedBy=multi-user.target

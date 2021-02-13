@@ -10,14 +10,22 @@
 - name: Copy script which adds IPtables rules.
   become: yes
   template:
-    src: firewall_rules.j2
-    dest: "/etc/firewall/firewall_rules.sh"
+    src: firewall_ipv4_rules.j2
+    dest: "/etc/firewall/firewall_ipv4_rules.sh"
     mode: a+x
 
-- name: Create systemd service to add Firewall rules to iptables.
+- name: Copy script which adds IP6tables rules.
+  become: yes
+  template:
+    src: firewall_ipv6_rules.j2
+    dest: "/etc/firewall/firewall_ipv6_rules.sh"
+    mode: a+x
+
+
+- name: Create systemd service to add Firewall IPv4 rules to iptables.
   copy:
-    src: firewall.service
-    dest: "/etc/systemd/system/firewall.service"
+    src: firewall_ipv4.service
+    dest: "/etc/systemd/system/firewall_ipv4.service"
     force: yes
     owner: root
     group: root
@@ -25,7 +33,23 @@
   notify:
     - reload systemd
 
-- name: Enable Firewall rules (on startup).
+- name: Create systemd service to add Firewall IPv6 rules to ip6tables.
+  copy:
+    src: firewall_ipv6.service
+    dest: "/etc/systemd/system/firewall_ipv6.service"
+    force: yes
+    owner: root
+    group: root
+    mode: '0755'
+  notify:
+    - reload systemd
+
+- name: Enable Firewall IPv4 rules (on startup).
   service:
-    name: firewall.service
+    name: firewall_ipv4.service
+    enabled: yes
+
+- name: Enable Firewall IPv6 rules (on startup).
+  service:
+    name: firewall_ipv6.service
     enabled: yes

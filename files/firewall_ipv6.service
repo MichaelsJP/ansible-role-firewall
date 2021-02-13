@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+# /etc/systemd/system/firewall_ipv6_rules.service
+
+[Unit]
+Description=Add Firewall IPv6 rules to ip6tables
+
+[Service]
+Type=oneshot
+ExecStart=/etc/firewall/firewall_ipv6_rules.sh
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,343 @@
+#!/bin/bash
+# {{ ansible_managed }}
+#title          :Add IPtables IPv4 rules
+#description    :This script sets docker ready iptables IPv4 rules.
+#author		    :Julian Psotta
+#email		    :julianpsotta@gmail.com
+#source         : https://github.com/MichaelsJP/ansible-role-firewall
+#date           :2021-01-03
+#usage		    :sudo bash firewall_ipv4_rules.j2
+#==============================================================================
+
+today=$(date +%Y%m%d)
+div=======================================
+
+############################
+###### Default vars ########
+############################
+IPTABLES="/sbin/iptables"
+# Log settigns
+LOG="LOG --log-level debug --log-tcp-sequence --log-tcp-options"
+LOG="$LOG --log-ip-options"
+# Rate limiting
+RLIMIT="-m limit --limit 3/s --limit-burst 30"
+# Interface
+INTERFACE="{{ bootstrap_firewall_interface_name|default("eth0") }}"
+
+# Script Name
+SCRIPT_NAME="FirewallIPv4Rules"
+# Combined Chain
+COMBINED_CHAIN="FILTERS"
+
+################################
+###### Helper functions ########
+################################
+# Set this variable in the main Script to give error and other print statements a proper script name.
+SCRIPT_NAME=${SCRIPT_NAME:-"FIREWALL_IPv4_SCRIPT"}
+say() {
+  echo -e "\e[44m""$SCRIPT_NAME:\e[49m $1" >&2
+}
+
+create_chain() {
+  if [ -n "$1" ]; then
+    say "Create chain $1"
+    $IPTABLES -N "$1"
+  fi
+}
+
+chain_exists() {
+  local chain_name="$1"
+  shift
+  [ $# -eq 1 ] && local table="--table $1"
+  $IPTABLES $table -n --list "$chain_name" >/dev/null 2>&1
+}
+
+check_programm() {
+  if [ -z "$1" ]; then
+    false
+  elif type -p "$1" >/dev/null; then
+    return
+  fi
+  false
+}
+
+################################
+###### Default policies ########
+################################
+# Set up logging into iptables file
+if ! grep -qxF ':msg,contains,"IPTABLES" -/var/log/iptables.log' /etc/rsyslog.d/00-rsyslog-iptables.conf; then
+  rm -f "/var/log/iptables.log"
+  echo ':msg,contains,"IPTABLES" -/var/log/iptables.log' >>/etc/rsyslog.d/00-rsyslog-iptables.conf
+  echo '& stop' >>/etc/rsyslog.d/00-rsyslog-iptables.conf
+elif ! grep -qxF '& stop' /etc/rsyslog.d/00-rsyslog-iptables.conf; then
+  rm -f "/var/log/iptables.log"
+  echo ':msg,contains,"IPTABLES" -/var/log/iptables.log' >>/etc/rsyslog.d/00-rsyslog-iptables.conf
+  echo '& stop' >>/etc/rsyslog.d/00-rsyslog-iptables.conf
+fi
+
+# Set the nat/mangle/raw tables' chains to ACCEPT
+$IPTABLES -t nat -P PREROUTING ACCEPT
+$IPTABLES -t nat -P OUTPUT ACCEPT
+$IPTABLES -t nat -P POSTROUTING ACCEPT
+
+$IPTABLES -t mangle -P PREROUTING ACCEPT
+$IPTABLES -t mangle -P INPUT ACCEPT
+$IPTABLES -t mangle -P FORWARD ACCEPT
+$IPTABLES -t mangle -P OUTPUT ACCEPT
+$IPTABLES -t mangle -P POSTROUTING ACCEPT
+
+###############################
+###### Default cleanup ########
+###############################
+
+# Flush non-docker default chains
+$IPTABLES -F INPUT
+$IPTABLES -F FORWARD
+$IPTABLES -F OUTPUT
+$IPTABLES -t nat -F
+$IPTABLES -t mangle -F
+
+# Zero all packets and counters.
+$IPTABLES -Z
+$IPTABLES -t nat -Z
+$IPTABLES -t mangle -Z
+
+##############################
+###### LOGGING Chains ########
+##############################
+
+# LOG packets, then ACCEPT.
+$IPTABLES -N ACCEPTLOG
+$IPTABLES -A ACCEPTLOG -j $LOG $RLIMIT --log-prefix "IPTABLES-ACCEPT "
+$IPTABLES -A ACCEPTLOG -j ACCEPT
+
+# LOG icmp packets, then ACCEPT.
+$IPTABLES -N ACCEPTICMPLOG
+$IPTABLES -A ACCEPTICMPLOG -j $LOG $RLIMIT --log-prefix "IPTABLES-ICMP-ACCEPT "
+$IPTABLES -A ACCEPTICMPLOG -j ACCEPT
+
+# LOG outgoing packets, then ACCEPT.
+$IPTABLES -N ACCEPTOUPUTLOG
+$IPTABLES -A ACCEPTOUPUTLOG -j $LOG $RLIMIT --log-prefix "IPTABLES-OUTPUT-ACCEPT "
+$IPTABLES -A ACCEPTOUPUTLOG -j ACCEPT
+
+# LOG packets, then DROP.
+$IPTABLES -N DROPLOG
+$IPTABLES -A DROPLOG -j $LOG $RLIMIT --log-prefix "IPTABLES-DROP "
+$IPTABLES -A DROPLOG -j DROP
+
+# LOG icmp packets, then DROP.
+$IPTABLES -N DROPICMPLOG
+$IPTABLES -A DROPICMPLOG -j $LOG $RLIMIT --log-prefix "IPTABLES-ICMP-DROP "
+$IPTABLES -A DROPICMPLOG -j DROP
+
+# LOG ssh packets, then DROP.
+$IPTABLES -N DROPSSHLOG
+$IPTABLES -A DROPSSHLOG -j $LOG $RLIMIT --log-prefix "IPTABLES-SSH-DROP "
+$IPTABLES -A DROPSSHLOG -j DROP
+
+# LOG outgoing packets, then DROP.
+$IPTABLES -N DROPOUTPUTLOG
+$IPTABLES -A DROPOUTPUTLOG -j $LOG $RLIMIT --log-prefix "IPTABLES-OUTPUT-DROP "
+$IPTABLES -A DROPOUTPUTLOG -j DROP
+
+# LOG outgoing packets, then DROP.
+$IPTABLES -N DROPFORWARDLOG
+$IPTABLES -A DROPFORWARDLOG -j $LOG $RLIMIT --log-prefix "IPTABLES-FORWARD-DROP "
+$IPTABLES -A DROPFORWARDLOG -j DROP
+
+# LOG packets, then REJECT.
+# TCP packets are rejected with a TCP reset.
+$IPTABLES -N REJECTLOG
+$IPTABLES -A REJECTLOG -j $LOG $RLIMIT --log-prefix "IPTABLES-REJECT "
+$IPTABLES -A REJECTLOG -p tcp -j REJECT --reject-with tcp-reset
+$IPTABLES -A REJECTLOG -j REJECT
+
+$IPTABLES -N RELATED_ICMP
+$IPTABLES -A RELATED_ICMP -p icmp --icmp-type destination-unreachable -j ACCEPTICMPLOG
+$IPTABLES -A RELATED_ICMP -p icmp --icmp-type time-exceeded -j ACCEPTICMPLOG
+$IPTABLES -A RELATED_ICMP -p icmp --icmp-type parameter-problem -j ACCEPTICMPLOG
+$IPTABLES -A RELATED_ICMP -j DROPICMPLOG
+
+##################################
+###### Custom user chains ########
+##################################
+# Create custom chains
+chain_exists DOCKER-USER || create_chain DOCKER-USER
+chain_exists $COMBINED_CHAIN || create_chain $COMBINED_CHAIN
+
+# Flush custom chains
+$IPTABLES -F DOCKER-USER
+$IPTABLES -F $COMBINED_CHAIN
+
+# Chain INPUT and DOCKER-USER to $COMBINED_CHAIN
+$IPTABLES -A INPUT -j $COMBINED_CHAIN
+{% if bootstrap_firewall_docker_secure %}
+$IPTABLES -A DOCKER-USER -i $INTERFACE -j $COMBINED_CHAIN
+{% endif %}
+
+###################################
+###### Default policies ########
+###################################
+# Default chain policies
+$IPTABLES -P $COMBINED_CHAIN DROP
+$IPTABLES -P FORWARD DROP
+{% if bootstrap_firewall_block_output is defined and bootstrap_firewall_block_output %}
+$IPTABLES -P OUTPUT DROP
+{% else %}
+$IPTABLES -P OUTPUT ACCEPT
+{% endif %}
+
+####################################
+###### Drop Invalid Traffic ########
+####################################
+# Explicitly drop invalid incoming traffic
+$IPTABLES -A $COMBINED_CHAIN -m state --state INVALID -j DROP
+
+# Drop invalid outgoing traffic, too.
+$IPTABLES -A OUTPUT -m state --state INVALID -j DROP
+
+# If we would use NAT, INVALID packets would pass - BLOCK them anyways
+$IPTABLES -A FORWARD -m state --state INVALID -j DROP
+
+
+###################################
+###### Special connections ########
+###################################
+# Allow loopback interface to do anything.
+$IPTABLES -A $COMBINED_CHAIN -i lo -j ACCEPT
+$IPTABLES -A OUTPUT -o lo -j ACCEPT
+
+# Allow connections related to existing allowed connections.
+$IPTABLES -A $COMBINED_CHAIN -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+$IPTABLES -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+$IPTABLES -A OUTPUT -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+
+{% if bootstrap_firewall_docker_secure %}
+# Allow Docker traffic for docker0 and br- network wildcard in the combined chain
+$IPTABLES -A $COMBINED_CHAIN -i docker0 -j ACCEPT
+$IPTABLES -A $COMBINED_CHAIN -i br-+ -j ACCEPT
+
+# Forward rules for docker0 and br- networks with wildcard
+$IPTABLES -A FORWARD -i docker0 -j ACCEPT
+$IPTABLES -A FORWARD -i br-+ -j ACCEPT
+
+# Allow docker to communicate with itself and the host.
+$IPTABLES -A FORWARD -o docker0 -j ACCEPT
+$IPTABLES -A FORWARD -o br-+ -j ACCEPT
+{% endif %}
+
+###########################
+###### Custom ICMP ########
+###########################
+
+# First, drop all fragmented ICMP packets (almost always malicious).
+$IPTABLES -A $COMBINED_CHAIN -p icmp --fragment -j DROPICMPLOG
+$IPTABLES -A OUTPUT -p icmp --fragment -j DROPICMPLOG
+$IPTABLES -A FORWARD -p icmp --fragment -j DROPICMPLOG
+
+# Allow all ESTABLISHED ICMP traffic.
+$IPTABLES -A $COMBINED_CHAIN -p icmp -m state --state ESTABLISHED -j ACCEPTICMPLOG $RLIMIT
+$IPTABLES -A OUTPUT -p icmp -m state --state ESTABLISHED -j ACCEPTICMPLOG $RLIMIT
+
+# Allow some parts of the RELATED ICMP traffic, block the rest.
+$IPTABLES -A $COMBINED_CHAIN -p icmp -m state --state RELATED -j RELATED_ICMP $RLIMIT
+$IPTABLES -A OUTPUT -p icmp -m state --state RELATED -j RELATED_ICMP $RLIMIT
+
+# Define the icmp incoming rules.
+{% if  bootstrap_firewall_restrict_incoming_icmp_to_internal %}
+# Only allow icmp from internal. Use drop to hide the server.
+$IPTABLES -A $COMBINED_CHAIN -p icmp -i $INTERFACE --icmp-type echo-request -j DROPICMPLOG $RLIMIT
+{% endif %}
+
+$IPTABLES -A $COMBINED_CHAIN -p icmp --icmp-type echo-request -j ACCEPTICMPLOG $RLIMIT
+
+# Allow outgoing ICMP echo requests (ping), but only rate-limited.
+$IPTABLES -A OUTPUT -p icmp --icmp-type echo-request -j ACCEPTOUPUTLOG $RLIMIT
+
+# Drop any other ICMP traffic.
+$IPTABLES -A $COMBINED_CHAIN -p icmp -j DROPICMPLOG
+$IPTABLES -A OUTPUT -p icmp -j DROPICMPLOG
+$IPTABLES -A FORWARD -p icmp -j DROPICMPLOG
+
+###############################
+##### Unrestricted Access #####
+###############################
+
+{% if bootstrap_firewall_restricted_access_ip is defined and bootstrap_firewall_restricted_access_ip | length >= 4 %}
+# Allow all access to specific ips and networks. Multiple need to be separated with commas. e.g. -s 0.0.0.0,127.0.0.1/8.
+$IPTABLES -A $COMBINED_CHAIN -p tcp -s {{ bootstrap_firewall_restricted_access_ip }} -j ACCEPTLOG
+{% endif %}
+
+##############################
+######## SSH Access ##########
+##############################
+
+# Only accept ssh if not on public interface. Else log and drop.
+$IPTABLES -A $COMBINED_CHAIN -i $INTERFACE -p tcp --dport 22 -j DROPSSHLOG
+$IPTABLES -A $COMBINED_CHAIN ! -i $INTERFACE -p tcp --dport 22 -j ACCEPTLOG
+
+##############################################
+###### Allow important outgoing ports ########
+##############################################
+
+{% if bootstrap_firewall_tcp_ports_outgoing is defined and bootstrap_firewall_tcp_ports_outgoing | length >= 1 %}
+#  Allow ports only on specified networks only
+$IPTABLES -A OUTPUT -p tcp --match multiport --dports {{ bootstrap_firewall_tcp_ports_outgoing }} -j ACCEPT
+{% endif %}
+
+{% if bootstrap_firewall_udp_ports_outgoing is defined and bootstrap_firewall_udp_ports_outgoing | length >= 1 %}
+#  Allow ports only on specified networks only
+$IPTABLES -A OUTPUT -p udp --match multiport --dports {{ bootstrap_firewall_udp_ports_outgoing }} -j ACCEPT
+{% endif %}
+
+##############################
+#### Application includes ####
+##############################
+
+{% if bootstrap_firewall_tcp_ports_external is defined and bootstrap_firewall_tcp_ports_external | length >= 1 %}
+$IPTABLES -A $COMBINED_CHAIN -i $INTERFACE -p tcp --match multiport --dports {{ bootstrap_firewall_tcp_ports_external }} -j ACCEPTLOG
+{% endif %}
+
+{% if bootstrap_firewall_udp_ports_external is defined and bootstrap_firewall_udp_ports_external | length >= 1 %}
+$IPTABLES -A $COMBINED_CHAIN -i $INTERFACE -p udp --match multiport --dports {{ bootstrap_firewall_udp_ports_external }} -j ACCEPTLOG
+{% endif %}
+
+# Drop all incoming traffic on chain: $COMBINED_CHAIN from interface: $INTERFACE here.
+$IPTABLES -A $COMBINED_CHAIN -i $INTERFACE -j DROPLOG
+
+{% if bootstrap_firewall_tcp_ports_internal is defined and bootstrap_firewall_tcp_ports_internal | length >= 1 %}
+#  Allow ports only on specified networks only
+$IPTABLES -A $COMBINED_CHAIN ! -i $INTERFACE -p tcp --match multiport --dports {{ bootstrap_firewall_tcp_ports_internal }} -j ACCEPTLOG
+{% endif %}
+
+{% if bootstrap_firewall_udp_ports_internal is defined and bootstrap_firewall_udp_ports_internal | length >= 1 %}
+#  Allow ports only on specified networks only
+$IPTABLES -A $COMBINED_CHAIN ! -i $INTERFACE -p udp --match multiport --dports {{ bootstrap_firewall_udp_ports_internal }} -j ACCEPTLOG
+{% endif %}
+
+###################################
+########## Ultimate drop ##########
+###################################
+
+# Use REJECT instead of REJECTLOG if you don't need/want logging.
+$IPTABLES -A $COMBINED_CHAIN -i $INTERFACE -j DROPLOG
+$IPTABLES -A OUTPUT -o $INTERFACE -j DROPOUTPUTLOG
+$IPTABLES -A FORWARD -i $INTERFACE -j DROPFORWARDLOG
+$IPTABLES -A $COMBINED_CHAIN -j REJECTLOG
+$IPTABLES -A OUTPUT -j REJECTLOG
+$IPTABLES -A FORWARD -j REJECTLOG
+
+######################################
+########## Restart Services ##########
+######################################
+# Restart Docker
+if check_programm "docker"; then
+  say "Restart docker"
+  systemctl restart docker
+fi
+
+##########################
+########## Exit ##########
+##########################
+exit 0

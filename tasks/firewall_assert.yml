@@ -55,3 +55,16 @@
     that:
       - bootstrap_firewall_docker_secure is defined
     quiet: yes
+
+
+- name: test if bootstrap_firewall_block_output is set correctly
+  assert:
+    that:
+      - bootstrap_firewall_block_output is defined
+    quiet: yes
+
+- name: test if bootstrap_firewall_block_ipv6 is set correctly
+  assert:
+    that:
+      - bootstrap_firewall_block_ipv6 is defined
+    quiet: yes

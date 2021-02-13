@@ -2,24 +2,31 @@
 # Interface name that connects the server to the webs.
 bootstrap_firewall_interface_name: "eth0" # Default: eth0
 
+# Block all ipv6 traffic completely
+bootstrap_firewall_block_ipv6: false
+
+# Block all output traffic except ports mentioned in `bootstrap_firewall_tcp_ports_outgoing` and `bootstrap_firewall_udp_ports_outgoing`.
+# Make sure you know what you're doing ;)!
+bootstrap_firewall_block_output: false
+
 # Define internal tcp ports. Multiple ports with , separated. e.g. '80,443,8080'.
 bootstrap_firewall_tcp_ports_internal: "80,443,8080"
 
 # Define internal udp ports. Multiple ports with , separated. e.g. '80,443,8080'.
-bootstrap_firewall_udp_ports_internal: [ ]
+bootstrap_firewall_udp_ports_internal: "67,68,546,547"
 
 # Define external tcp ports. Multiple ports with , separated. e.g. '80,443,8080'.
 bootstrap_firewall_tcp_ports_external: [ ]
 
 # Define external udp ports. Multiple ports with , separated. e.g. '80,443,8080'.
-bootstrap_firewall_udp_ports_external: [ ]
+bootstrap_firewall_udp_ports_external: "67,68,546,547"
 
 # Define allowed outgoing tcp ports. Multiple ports with , separated. e.g. '80,443,8080'.
 bootstrap_firewall_tcp_ports_outgoing: "21,22,25,43,80,443,465,587,995" # Allow on all interfaces. Default: (SSH,FTP,STMP,WHOIS,HTTP,HTTPS,SMTPS,SUBMISSION,POP3S)
 
 # Define allowed outgoing udp ports. Multiple ports with , separated. e.g. '80,443,8080'.
 # DNS and ntp are needed for the system to work properly.
-bootstrap_firewall_udp_ports_outgoing: "53,123" # Allow on all interfaces. Default: (dns, ntp)
+bootstrap_firewall_udp_ports_outgoing: "53,67,68,546,547,123" # Allow on all interfaces. Default: (dns, dhcp, ntp)
 
 # Decide if iptables will turn of connections from external sources.
 bootstrap_firewall_restrict_incoming_icmp_to_internal: true # When icmp is reachable and not dropped, the outside knows the server is not reachable but online and botnets will continue hammering it.
@@ -33,3 +40,5 @@ bootstrap_firewall_docker_secure: true
 # SSH is always denied from external besides the ips or ip ranges defined below.
 # Only enable when necessary! Activating it will put pressure on the cpu, when checking ssh requests against ip addresses.
 bootstrap_firewall_restricted_access_ip: [ ] # Multiple need to be separated with commas. e.g. 0.0.0.0,127.0.0.1/8.
+
+bootstrap_firewall_restricted_access_ipv6: [ ] # Multiple need to be separated with commas. e.g. fe80::/10,::1/128
